@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Compiler</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #0f172a; color: #f8fafc; margin: 0; padding: 16px; }
+    .card { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    h2 { margin-top: 0; font-size: 1.2rem; color: #38bdf8; }
+    label { display: block; margin-bottom: 6px; font-size: 0.9rem; color: #94a3b8; }
+    input, textarea, select {
+      width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155;
+      background: #0f172a; color: #fff; margin-bottom: 12px; font-size: 0.95rem;
+    }
+    button {
+      width: 100%; padding: 12px; border-radius: 8px; border: none;
+      background: #0284c7; color: white; font-weight: bold; font-size: 1rem; cursor: pointer;
+    }
+    button:active { background: #0369a1; }
+    pre { background: #0b1120; padding: 12px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; font-size: 0.85rem; }
+    .status { font-size: 0.85rem; color: #38bdf8; margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>تنظیمات اتصال</h2>
+    <label>کلید اختصاصی Google AI Studio (API Key):</label>
+    <input type="password" id="apiKey" placeholder="AIzaSy...">
+    <button onclick="saveKey()">ذخیره کلید در گوشی</button>
+    <div id="keyStatus" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>کامپایل و بهبود پرامپت</h2>
+    <label>متن پرامپت یا ایده خام:</label>
+    <textarea id="rawPrompt" rows="4" placeholder="مثلاً: یک لوگو برای کافه مدرن طراحی کن..."></textarea>
+    
+    <label>قالب یا متدولوژی بهینه‌سازی:</label>
+    <select id="mode">
+      <option value="optimize">بهینه‌سازی و شفاف‌سازی ساختار پرامپت</option>
+      <option value="translate_en">ترجمه و تقویت تخصصی به انگلیسی</option>
+      <option value="midjourney">تبدیل به پرامپت تخصصی تصویر (Midjourney/Flux)</option>
+    </select>
+    
+    <button id="runBtn" onclick="compilePrompt()">کامپایل پرامپت</button>
+  </div>
+
+  <div class="card" id="outputCard" style="display:none;">
+    <h2>نتیجه نهایی</h2>
+    <pre id="output"></pre>
+    <button onclick="copyOutput()" style="background:#334155; margin-top:8px;">کپی نتیجه</button>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedKey = localStorage.getItem("gemini_key");
+      if (savedKey) {
+        document.getElementById("apiKey").value = savedKey;
+        document.getElementById("keyStatus").innerText = "کلید ذخیره شده و آماده است.";
+      }
+    });
+
+    function saveKey() {
+      const key = document.getElementById("apiKey").value.trim();
+      if (!key) return alert("لطفاً کلید را وارد کنید");
+      localStorage.setItem("gemini_key", key);
+      document.getElementById("keyStatus").innerText = "کلید با موفقیت ذخیره شد.";
+    }
+
+    async function compilePrompt() {
+      const key = localStorage.getItem("gemini_key");
+      const text = document.getElementById("rawPrompt").value.trim();
+      const mode = document.getElementById("mode").value;
+      if (!key) return alert("ابتدا کلید API را وارد و ذخیره کنید.");
+      if (!text) return alert("متن پرامپت را وارد کنید.");
+
+      const btn = document.getElementById("runBtn");
+      btn.innerText = "در حال پردازش...";
+      btn.disabled = true;
+
+      let instruction = "Improve, structure, and optimize the following prompt for maximum clarity and detail in LLMs:";
+      if (mode === "translate_en") instruction = "Translate this prompt to fluent, high-level English, maintaining strict instructional intent:";
+      if (mode === "midjourney") instruction = "Convert this idea into a production-grade image generation prompt (describing lighting, camera lens, mood, rendering engine, style):";
+
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `${instruction}\n\n${text}` }] }]
+          })
+        });
+
+        const data = await res.json();
+        const result = data.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(data, null, 2);
+        
+        document.getElementById("outputCard").style.display = "block";
+        document.getElementById("output").innerText = result;
+      } catch (err) {
+        alert("خطا در برقراری ارتباط: " + err.message);
+      } finally {
+        btn.innerText = "کامپایل پرامپت";
+        btn.disabled = false;
+      }
+    }
+
+    function copyOutput() {
+      const text = document.getElementById("output").innerText;
+      navigator.clipboard.writeText(text);
+      alert("کپی شد!");
+    }
+  </script>
+</body>
+</html>
