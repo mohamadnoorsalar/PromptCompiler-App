@@ -19,7 +19,7 @@
       background: #0284c7; color: white; font-weight: bold; font-size: 1rem; cursor: pointer;
     }
     button:active { background: #0369a1; }
-    pre { background: #0b1120; padding: 12px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; font-size: 0.85rem; }
+    pre { background: #0b1120; padding: 12px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; font-size: 0.85rem; line-height: 1.6; }
     .status { font-size: 0.85rem; color: #38bdf8; margin-top: 6px; }
   </style>
 </head>
@@ -36,7 +36,7 @@
   <div class="card">
     <h2>کامپایل و بهبود پرامپت</h2>
     <label>متن پرامپت یا ایده خام:</label>
-    <textarea id="rawPrompt" rows="4" placeholder="مثلاً: یک لوگو برای کافه مدرن طراحی کن..."></textarea>
+    <textarea id="rawPrompt" rows="4" placeholder="مثلاً: سیستم مدیریت هوشمند سالن پرورش پرندگان زینتی..."></textarea>
     
     <label>قالب یا متدولوژی بهینه‌سازی:</label>
     <select id="mode">
@@ -86,7 +86,7 @@
       if (mode === "midjourney") instruction = "Convert this idea into a production-grade image generation prompt (describing lighting, camera lens, mood, rendering engine, style):";
 
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -96,10 +96,15 @@
         });
 
         const data = await res.json();
-        const result = data.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(data, null, 2);
         
-        document.getElementById("outputCard").style.display = "block";
-        document.getElementById("output").innerText = result;
+        if (data.error) {
+          document.getElementById("outputCard").style.display = "block";
+          document.getElementById("output").innerText = "خطای سرویس: " + data.error.message;
+        } else {
+          const result = data.candidates?.[0]?.content?.parts?.[0]?.text || "پاسخی دریافت نشد.";
+          document.getElementById("outputCard").style.display = "block";
+          document.getElementById("output").innerText = result;
+        }
       } catch (err) {
         alert("خطا در برقراری ارتباط: " + err.message);
       } finally {
@@ -111,7 +116,7 @@
     function copyOutput() {
       const text = document.getElementById("output").innerText;
       navigator.clipboard.writeText(text);
-      alert("کپی شد!");
+      alert("متن کپی شد!");
     }
   </script>
 </body>
