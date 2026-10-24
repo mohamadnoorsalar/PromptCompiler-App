@@ -36,7 +36,7 @@
   <div class="card">
     <h2>کامپایل و بهبود پرامپت</h2>
     <label>متن پرامپت یا ایده خام:</label>
-    <textarea id="rawPrompt" rows="4" placeholder="مثلاً: سیستم مدیریت هوشمند سالن پرورش پرندگان زینتی..."></textarea>
+    <textarea id="rawPrompt" rows="4" placeholder="ایده یا پرامپت خام را بنویسید..."></textarea>
     
     <label>قالب یا متدولوژی بهینه‌سازی:</label>
     <select id="mode">
@@ -86,7 +86,7 @@
       if (mode === "midjourney") instruction = "Convert this idea into a production-grade image generation prompt (describing lighting, camera lens, mood, rendering engine, style):";
 
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${key}`;
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
