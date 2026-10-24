@@ -22,7 +22,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Capacitor & Generate Android Project
+      - name: Prepare Web Assets & Install Capacitor
         run: |
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/android
@@ -35,9 +35,9 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: PromptCompiler-APK
